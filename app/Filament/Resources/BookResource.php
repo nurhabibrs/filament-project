@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -29,6 +30,7 @@ class BookResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $nameOfBook = Str::random(5) . "-";
         return $form
             ->schema([
                 TextInput::make('title')
@@ -48,8 +50,8 @@ class BookResource extends Resource
                     ->required(),
                 FileUpload::make('image')
                     ->getUploadedFileNameForStorageUsing(
-                        fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
-                            ->prepend('buku-'),
+                        fn (TemporaryUploadedFile $file): string => (string) str(strtolower($nameOfBook . $file->getClientOriginalName()))
+                            ->prepend('book-'),
                     )
                     ->image()
                     ->imageEditor()
@@ -67,12 +69,13 @@ class BookResource extends Resource
                 ImageColumn::make('image'),
                 TextColumn::make('title')->searchable(),
                 TextColumn::make('category.name')->searchable(),
-                TextColumn::make('writer'),
+                TextColumn::make('writer')->searchable(),
                 TextColumn::make('year'),
                 TextColumn::make('pages'),
             ])
             ->filters([
-                //
+                SelectFilter::make('category_id')
+                    ->relationship(name: 'category', titleAttribute: 'name')
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
