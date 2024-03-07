@@ -21,7 +21,9 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-tag';
+
+    protected static ?string $modelLabel = 'Book Categories';
 
     public static function form(Form $form): Form
     {
@@ -40,7 +42,6 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id'),
                 TextColumn::make('name'),
                 TextColumn::make('slug'),
             ])
@@ -48,7 +49,13 @@ class CategoryResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->icon('heroicon-m-pencil-square')
+                    ->iconButton(),
+                Tables\Actions\DeleteAction::make()
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->iconButton(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -17,6 +17,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -41,6 +42,15 @@ class BookResource extends Resource
                     ->required(),
                 Select::make('category_id')
                     ->relationship(name: 'category', titleAttribute: 'name')
+                    ->searchable()
+                    ->createOptionForm([
+                        TextInput::make('name')
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state))),
+                        TextInput::make('slug')
+                            ->required()
+                    ])
                     ->required(),
                 TextInput::make('writer')
                     ->required(),
@@ -57,15 +67,26 @@ class BookResource extends Resource
                     ->imageEditor()
                     ->disk('public')
                     ->directory('images')
-                    ->required(),
-            ]);
+                    ->required()
+                    ->columnSpan(2),
+            ])->columns(2);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->groups([
+                Group::make('category.name')
+                    ->collapsible(),
+                Group::make('writer')
+                    ->collapsible(),
+                Group::make('year')
+                    ->collapsible(),
+            ])
+            ->emptyStateHeading('No books found')
+            ->emptyStateDescription('Once you add book, it will appear here.')
+            ->emptyStateIcon('heroicon-o-book-open')
             ->columns([
-                TextColumn::make('id'),
                 ImageColumn::make('image'),
                 TextColumn::make('title')->searchable(),
                 TextColumn::make('category.name')->searchable(),
@@ -78,7 +99,13 @@ class BookResource extends Resource
                     ->relationship(name: 'category', titleAttribute: 'name')
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->icon('heroicon-m-pencil-square')
+                    ->iconButton(),
+                Tables\Actions\DeleteAction::make()
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->iconButton(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
