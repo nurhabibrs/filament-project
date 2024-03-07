@@ -68,7 +68,7 @@ class BookResource extends Resource
                     ->disk('public')
                     ->directory('images')
                     ->required()
-                    ->columnSpan(2),
+                    ->columnSpanFull(),
             ])->columns(2);
     }
 
