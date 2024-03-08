@@ -1,35 +1,30 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\CategoryResource\RelationManagers;
 
-use App\Filament\Resources\BookResource\Pages;
-use App\Filament\Resources\BookResource\RelationManagers;
-use App\Models\Book;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Set;
-use Filament\Resources\Resource;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Filament\Tables\Grouping\Group;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
-class BookResource extends Resource
+class BooksRelationManager extends RelationManager
 {
-    protected static ?string $model = Book::class;
+    protected static string $relationship = 'books';
 
-    protected static ?string $navigationIcon = 'heroicon-o-book-open';
-
-    public static function form(Form $form): Form
+    public function form(Form $form): Form
     {
         $nameOfBook = Str::random(5) . "-";
         return $form
@@ -73,12 +68,11 @@ class BookResource extends Resource
             ])->columns(2);
     }
 
-    public static function table(Table $table): Table
+    public function table(Table $table): Table
     {
         return $table
+            ->recordTitleAttribute('name')
             ->groups([
-                Group::make('category.name')
-                    ->collapsible(),
                 Group::make('writer')
                     ->collapsible(),
                 Group::make('year')
@@ -90,44 +84,24 @@ class BookResource extends Resource
             ->columns([
                 ImageColumn::make('image'),
                 TextColumn::make('title')->searchable(),
-                TextColumn::make('category.name')->searchable(),
                 TextColumn::make('writer')->searchable(),
                 TextColumn::make('year'),
                 TextColumn::make('pages'),
             ])
             ->filters([
-                SelectFilter::make('category_id')
-                    ->relationship(name: 'category', titleAttribute: 'name')
+                //
+            ])
+            ->headerActions([
+                Tables\Actions\CreateAction::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                    // ->icon('heroicon-m-pencil-square')
-                    // ->iconButton(),
                 Tables\Actions\DeleteAction::make(),
-                    // ->icon('heroicon-o-trash')
-                    // ->color('danger')
-                    // ->iconButton(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListBooks::route('/'),
-            'create' => Pages\CreateBook::route('/create'),
-            'edit' => Pages\EditBook::route('/{record}/edit'),
-        ];
     }
 }
