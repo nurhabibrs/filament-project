@@ -16,10 +16,15 @@ class Book extends Model
         'writer', 
         'year', 
         'pages',
-        'image'
+        'image',
+        'stock'
     ];
 
     public function category() {
         return $this->belongsTo(Category::class);
+    }
+
+    public function borrows() {
+        return $this->hasMany(Borrow::class);
     }
 }

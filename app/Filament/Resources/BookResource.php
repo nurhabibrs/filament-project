@@ -59,6 +59,8 @@ class BookResource extends Resource
                     ->required(),
                 TextInput::make('pages')
                     ->required(),
+                TextInput::make('stock')
+                    ->required(),
                 FileUpload::make('image')
                     ->getUploadedFileNameForStorageUsing(
                         fn (TemporaryUploadedFile $file): string => (string) str(strtolower($nameOfBook . $file->getClientOriginalName()))
@@ -94,6 +96,7 @@ class BookResource extends Resource
                 TextColumn::make('writer')->searchable(),
                 TextColumn::make('year'),
                 TextColumn::make('pages'),
+                TextColumn::make('stock')->numeric(),
             ])
             ->filters([
                 SelectFilter::make('category_id')
