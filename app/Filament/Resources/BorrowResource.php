@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BorrowResource\Pages;
 use App\Filament\Resources\BorrowResource\RelationManagers;
+use App\Models\Book;
 use App\Models\Borrow;
 use Closure;
 use Filament\Forms;
@@ -60,6 +61,7 @@ class BorrowResource extends Resource
                             };
                         },
                     ])
+                    ->visibleOn('create')
                     ->required(),
                 DateTimePicker::make('return_of_book')
                     ->visibleOn('edit'),
@@ -81,15 +83,52 @@ class BorrowResource extends Resource
                 TextColumn::make('charge')
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->before(function ($record) {
+                        $query = DB::table('books')->where('id', $record['book_id'])->first();
+                        $returnedStock = (int) $query->stock + $record['number_of_borrow'];
+
+                        DB::beginTransaction();
+
+                        try {
+                            $book = Book::find($record['book_id']);
+                            $book->stock = $returnedStock;
+                            $book->save();
+                            
+                            DB::commit();
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                        }
+                    }),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\RestoreAction::make()
+                    ->before(function ($record){
+                        $query = DB::table('books')->where('id', $record['book_id'])->first();
+                        $updatedStock = (int) $query->stock - $record['number_of_borrow'];
+
+                        DB::beginTransaction();
+
+                        try {
+                            $book = Book::find($record['book_id']);
+                            $book->stock = $updatedStock;
+                            $book->save();
+                            
+                            DB::commit();
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    // ...
                 ]),
             ]);
     }
@@ -108,5 +147,14 @@ class BorrowResource extends Resource
             'create' => Pages\CreateBorrow::route('/create'),
             'edit' => Pages\EditBorrow::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 }

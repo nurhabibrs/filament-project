@@ -46,20 +46,25 @@ class CategoryResource extends Resource
                 TextColumn::make('slug'),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                     // ->icon('heroicon-m-pencil-square')
                     // ->iconButton(),
-                Tables\Actions\DeleteAction::make()
+                Tables\Actions\DeleteAction::make(),
                     // ->icon('heroicon-o-trash')
                     // ->color('danger')
                     // ->iconButton(),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    // ...
                 ]),
             ]);
     }
@@ -78,5 +83,14 @@ class CategoryResource extends Resource
             'create' => Pages\CreateCategory::route('/create'),
             'edit' => Pages\EditCategory::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 }

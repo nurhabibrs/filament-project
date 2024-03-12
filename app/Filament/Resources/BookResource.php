@@ -100,7 +100,9 @@ class BookResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('category_id')
-                    ->relationship(name: 'category', titleAttribute: 'name')
+                    ->relationship(name: 'category', titleAttribute: 'name'),
+                Tables\Filters\TrashedFilter::make(),
+                
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -110,10 +112,15 @@ class BookResource extends Resource
                     // ->icon('heroicon-o-trash')
                     // ->color('danger')
                     // ->iconButton(),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    // ...
                 ]),
             ]);
     }
@@ -132,5 +139,14 @@ class BookResource extends Resource
             'create' => Pages\CreateBook::route('/create'),
             'edit' => Pages\EditBook::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 }
