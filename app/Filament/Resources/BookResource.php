@@ -28,6 +28,8 @@ class BookResource extends Resource
     protected static ?string $model = Book::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
+    
+    protected static ?string $navigationGroup = 'Books Management';
 
     public static function form(Form $form): Form
     {
@@ -86,7 +88,7 @@ class BookResource extends Resource
                 Group::make('year')
                     ->collapsible(),
             ])
-            ->emptyStateHeading('No books found')
+            ->emptyStateHeading('No book found')
             ->emptyStateDescription('Once you add book, it will appear here.')
             ->emptyStateIcon('heroicon-o-book-open')
             ->columns([
@@ -128,7 +130,7 @@ class BookResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\BorrowsRelationManager::class,
         ];
     }
 

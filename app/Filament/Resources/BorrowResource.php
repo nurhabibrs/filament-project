@@ -32,6 +32,8 @@ class BorrowResource extends Resource
 
     protected static ?string $modelLabel = 'Book Loan';
 
+    protected static ?string $navigationGroup = 'Books Management';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -63,15 +65,15 @@ class BorrowResource extends Resource
                     ])
                     ->visibleOn('create')
                     ->required(),
-                DateTimePicker::make('return_of_book')
+                DateTimePicker::make('return_book')
                     ->visibleOn('edit'),
-            ]);
+            ])->columns(1);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->emptyStateHeading('No books has been borrowed')
+            ->emptyStateHeading('No book has been borrowed')
             ->emptyStateDescription('Once you borrow the book, it will appear here.')
             ->columns([
                 ImageColumn::make('book.image'),
@@ -79,7 +81,7 @@ class BorrowResource extends Resource
                 TextColumn::make('book.title'),
                 TextColumn::make('number_of_borrow'),
                 TextColumn::make('deadline'),
-                TextColumn::make('return_of_book'),
+                TextColumn::make('return_book'),
                 TextColumn::make('charge')
             ])
             ->filters([

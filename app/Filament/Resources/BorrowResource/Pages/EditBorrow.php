@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\BorrowResource\Pages;
 
 use App\Filament\Resources\BorrowResource;
+use App\Models\Borrow;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class EditBorrow extends EditRecord
 {
@@ -25,7 +27,31 @@ class EditBorrow extends EditRecord
     {
         $record->update($data);
 
-        // dd($data);
+        if ($data['return_book'] > $record['deadline']) {
+            DB::beginTransaction();
+
+            try {
+                $borrow = Borrow::find($record['id']);
+                $borrow->charge = 1000;
+                $borrow->save();
+                
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+            }
+        } else {
+            DB::beginTransaction();
+
+            try {
+                $borrow = Borrow::find($record['id']);
+                $borrow->charge = 0;
+                $borrow->save();
+                
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+            }
+        }
 
         return $record;
     }
