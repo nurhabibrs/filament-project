@@ -6,7 +6,7 @@ use App\Filament\Resources\BorrowResource\Pages;
 use App\Filament\Resources\BorrowResource\RelationManagers;
 use App\Models\Book;
 use App\Models\Borrow;
-use Closure;
+use Closure;        
 use Filament\Forms;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -66,6 +66,7 @@ class BorrowResource extends Resource
                     ->visibleOn('create')
                     ->required(),
                 DateTimePicker::make('return_book')
+                    ->readonly()
                     ->visibleOn('edit'),
             ])->columns(1);
     }
@@ -124,6 +125,33 @@ class BorrowResource extends Resource
                             DB::rollBack();
                         }
                     }),
+                Tables\Actions\Action::make('updateReturnBook')
+                    ->label('Return Book')
+                    ->action(function (Borrow $record): void {
+                        $record->update([
+                            'return_book' => now()
+                        ]);
+
+                        $query = DB::table('books')->where('id', $record['book_id'])->first();
+                        $returnedStock = (int) $query->stock + $record['number_of_borrow'];
+
+                        DB::beginTransaction();
+
+                        try {
+                            
+                            $book = Book::find($record['book_id']);
+                            $book->stock = $returnedStock;
+                            $book->save();
+                            
+                            DB::commit();
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                        }
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Return This Book')
+                    ->modalDescription('Are you sure you\'d like to return this? This cannot be undone.')
+                    ->modalSubmitActionLabel('Yes, return it'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
