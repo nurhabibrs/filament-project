@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('image')->nullable();
-            $table->string('phone');
-            $table->boolean('is_admin');
+            $table->string('phone')->nullable();
+            $table->boolean('is_admin')->nullable();
         });
     }
 
